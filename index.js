@@ -34,7 +34,7 @@ module.exports = {
               return;
             }
 
-            resolve(outputPath);
+            resolve('./dist');
           }.bind(this);
         }.bind(this))
         .then(this._logSuccess.bind(this, outputPath))
