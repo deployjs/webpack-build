@@ -5,7 +5,7 @@ var RSVP = require('rsvp');
 var glob  = require('glob');
 var DeployPluginBase = require('ember-cli-deploy-plugin');
 var path = require('path');
-const exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
 
 module.exports = {
   name: 'deployjs-webpack-build',
@@ -20,22 +20,31 @@ module.exports = {
       build: function(/* context */) {
         var self       = this;
         var configFile = this.readConfig('configFile');
+        var outputPath = './dist';
 
         this.log('building app with config `' + configFile + '`...', { verbose: true });
 
         return new RSVP.Promise(function(resolve, reject) {
-          exec('webpack --config ' + configFile),
-            {maxBuffer: 1024 * 1024 * 32},
-            function(err, stdout, stderr)
-          {
-            if(err) {
-              this.log(err, { color: 'red' });
-              reject(err);
-              return;
-            }
+          try {
+            var command = spawn('webpack', ['--config', configFile]);
+            command.stdout.on('data', function(data) {
+              this.log(data, { verbose: true });
+            }.bind(this));
 
-            resolve('./dist');
-          }.bind(this);
+            command.stderr.on('data', function(data) {
+              this.log(data, { verbose: true });
+            }.bind(this));
+
+            command.on('close', function(code) {
+              if (code !== 0) {
+                reject('build failed with code ' + code);
+              } else {
+                resolve(outputPath);
+              }
+            }.bind(this));
+          } catch(err) {
+            reject(err);
+          }
         }.bind(this))
         .then(this._logSuccess.bind(this, outputPath))
         .then(function(files) {
