@@ -18,7 +18,6 @@ module.exports = {
       },
 
       build: function(/* context */) {
-        var self       = this;
         var configFile = this.readConfig('configFile');
         var outputPath = './dist';
 
@@ -61,15 +60,14 @@ module.exports = {
         }.bind(this));
       },
       _logSuccess: function(outputPath) {
-        var self = this;
         var files = glob.sync('**/**/*', { nonull: false, nodir: true, cwd: outputPath });
 
         if (files && files.length) {
           files.forEach(function(path) {
-            self.log('✔  ' + path, { verbose: true });
-          });
+            this.log('✔  ' + path, { verbose: true });
+          }.bind(this));
         }
-        self.log('build ok', { verbose: true });
+        this.log('build ok', { verbose: true });
 
         return RSVP.resolve(files);
       }
